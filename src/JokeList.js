@@ -27,7 +27,8 @@ class JokeList extends React.Component{
     }
     render(){
         var jokes=this.state.jokes.map(j=>(
-            <div>{j.joke} - {j.votes}</div>
+            <Joke joke={j.joke}vote={j.votes}></Joke>
+    
         ))
         return <div className="Joke-List">
             <div className="joke-list-sideBar">
