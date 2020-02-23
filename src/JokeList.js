@@ -11,9 +11,16 @@ class JokeList extends React.Component{
     constructor(props){
         super(props);
         this.state={
-            jokes:[]
+            jokes:JSON.parse(window.localStorage.getItem("jokes"))||[],
+            isloading:false,
         }
+        this.seenjokes= new Set(this.state.jokes.map(
+            j =>(
+                j.joke
+            )
+        ));
         this.handleVote=this.handleVote.bind(this);
+        this.handleClick=this.handleClick.bind(this);
     }
     handleVote(id,delta){
         this.setState(
@@ -27,21 +34,47 @@ class JokeList extends React.Component{
                         
                     )
                 }
-            )
+            ),() =>
+            window.localStorage.setItem("jokes", JSON.stringify(this.state.jokes))
         );
+        
+    }
+    componentWillUnmount(){
+        
+    }
+    handleClick(){
+        this.setState({isloading:true},this.getJoke)        ;
     }
     async componentDidMount(){
-         let jokes=[];
+      if (this.state.jokes.length ===0) this.getJoke();
+        
+    }
+    async getJoke(){
+        try
+        {
+        let jokes=[];
         while(jokes.length<this.props.numJokestoGet){
             let res= await axios.get(API_URL,{headers:{Accept : "application/json"}});
+            if(!this.seenjokes.has(res.data.joke))
             jokes.push({id:uuid(),joke:res.data.joke,votes:0});
             
         }
-        this.setState({jokes:jokes})
+        this.setState(st=>(
+           { isloading:false,
+               jokes: [...st.jokes,...jokes]
+           } 
+        ),()=>(
+            window.localStorage.setItem("jokes", JSON.stringify(this.state.jokes))
+        
+        ));
+        } catch(e){
+            alert(e);
+            this.setState({isloading:false});
+        }
         
     }
     render(){
-        var jokes=this.state.jokes.map(j=>(
+        var jokes=this.state.jokes.sort((a,b)=>(b.votes -a.votes)).map(j=>(
             <Joke 
             upvote={()=>this.handleVote(j.id,1)} 
             downvote={()=>(this.handleVote(j.id,-1))}
@@ -49,13 +82,21 @@ class JokeList extends React.Component{
              vote={j.votes}></Joke>
     
         ))
+
+        if(this.state.isloading){
+            return            <div className="JokeList-spinner">
+                <i className="far fa-8x fa-laugh fa-spin"></i>
+                <h1 className="joke-list-title"> loading ... </h1>
+            </div>
+        }
+
         return <div className="Joke-List">
             <div className="joke-list-sideBar">
             <h1 className="joke-list-title">
                 <span>Dad</span> Jokes
             </h1>
             <img className="laugh"src="https://assets.dryicons.com/uploads/icon/svg/8927/0eb14c71-38f2-433a-bfc8-23d9c99b3647.svg" alt="Laughthing Emoji"/>
-            <button className="JokeList-getmore">New Jokes</button>
+            <button className="JokeList-getmore" onClick={this.handleClick}>New Jokes</button>
             </div>
             
             <div className="JokeList-jokes">
