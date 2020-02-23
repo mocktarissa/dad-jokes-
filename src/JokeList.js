@@ -2,7 +2,7 @@ import React from 'react'
 import axios from 'axios';
 import Joke from './Joke';
 import './jokelist.css';
-
+import uuid from 'uuid/v4'
 var API_URL="https://icanhazdadjoke.com/";
 class JokeList extends React.Component{
     static defaultProps={
@@ -13,13 +13,28 @@ class JokeList extends React.Component{
         this.state={
             jokes:[]
         }
+        this.handleVote=this.handleVote.bind(this);
     }
-
+    handleVote(id,delta){
+        this.setState(
+            st=>(
+                {
+                    jokes:st.jokes.map(
+                        j=>
+                            j.id ===id ? {
+                                ...j,votes: j.votes+delta
+                            } : j
+                        
+                    )
+                }
+            )
+        );
+    }
     async componentDidMount(){
          let jokes=[];
         while(jokes.length<this.props.numJokestoGet){
             let res= await axios.get(API_URL,{headers:{Accept : "application/json"}});
-            jokes.push({joke:res.data.joke,votes:0});
+            jokes.push({id:uuid(),joke:res.data.joke,votes:0});
             
         }
         this.setState({jokes:jokes})
@@ -27,7 +42,11 @@ class JokeList extends React.Component{
     }
     render(){
         var jokes=this.state.jokes.map(j=>(
-            <Joke joke={j.joke}vote={j.votes}></Joke>
+            <Joke 
+            upvote={()=>this.handleVote(j.id,1)} 
+            downvote={()=>(this.handleVote(j.id,-1))}
+             key={j.id}joke={j.joke}
+             vote={j.votes}></Joke>
     
         ))
         return <div className="Joke-List">
