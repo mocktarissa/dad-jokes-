@@ -1,3 +1,4 @@
-See a life demo here https://kind-sinoussi-0ec3bf.netlify.com/
+# See a life demo here https://where-are-dads-jokes.netlify.app/
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
